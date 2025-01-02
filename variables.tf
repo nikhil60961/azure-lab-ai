@@ -32,3 +32,8 @@ variable "prvt_network_cidr" {
   type = string
   description = "VNet network address space in CIDR notation."
 }
+
+variable "tenant_id" {
+  type = string
+  description = "tenant id."
+}
