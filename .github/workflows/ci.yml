@@ -39,27 +39,37 @@ jobs:
           terraform_version: 1.1.0
 
         
-      - name: Terraform Init
-        run: |
-          terraform init \
-            -reconfigure \
-            -backend-config="resource_group_name=NYU-lab" \
-            -backend-config="storage_account_name=nyudev" \
-            -backend-config="container_name=nyudevcontainer" \
-            -backend-config="key=nyu-lab-ai.tfstate" \
-        # -backend-config="use_azure_rm_environment=true" \
-        # -backend-config="use_azure_rm_enid=true"
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      # - name: Terraform Init
+      #   run: |
+      #     terraform init \
+      #       -reconfigure \
+      #       -backend-config="resource_group_name=NYU-lab" \
+      #       -backend-config="storage_account_name=nyudev" \
+      #       -backend-config="container_name=nyudevcontainer" \
+      #       -backend-config="key=nyu-lab-ai.tfstate" \
+      #   # -backend-config="use_azure_rm_environment=true" \
+      #   # -backend-config="use_azure_rm_enid=true"
+      #   env:
+      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      #     ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      #     ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   plan:
     needs: development
     runs-on: self-hosted
     environment: 'dev'
     steps:
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Terraform Init
