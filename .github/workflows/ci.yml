@@ -56,9 +56,10 @@ jobs:
       #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   plan:
-    needs: development
+    if: success()
     runs-on: self-hosted
-    environment: 'dev'
+    # environment: 'dev'
+    needs: development 
     steps:
       - uses: azure/login@v2
         with:
