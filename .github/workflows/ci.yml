@@ -1,0 +1,119 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      # - main
+      - nonprod
+permissions:
+  id-token: write
+  issues: write
+  contents: read
+jobs:
+  development:
+    if: github.ref == 'refs/heads/nonprod'
+    runs-on: self-hosted
+
+    env:
+      TF_VAR_ENVIRONMENT: dev
+    steps:
+
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+          
+          
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.0
+
+        
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -reconfigure \
+            -backend-config="resource_group_name=NYU-lab" \
+            -backend-config="storage_account_name=nyudev" \
+            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="key=nyu-lab-ai.tfstate" \
+        # -backend-config="use_azure_rm_environment=true" \
+        # -backend-config="use_azure_rm_enid=true"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Await Manual Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: nikhil609651  # ensure this is a valid GitHub username
+          minimum-approvals: 1
+          issue-title: "Manual Approval Required for Terraform Apply"
+          issue-body: "Please review and approve the deployment."
+  
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+  production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    env:
+      TF_VAR_ENVIRONMENT: prod
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.0
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -reconfigure \
+            -backend-config="resource_group_name=rg-devops-prod-001" \
+            -backend-config="storage_account_name=stateadbprodeastus2001" \
+            -backend-config="container_name=tfstate-openai" \
+            -backend-config="key=shared.tfstate" 
+    # -backend-config="use_azure_rm_environment=true" \
+    # -backend-config="use_azure_rm_enid=true"
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -var-file=prod/prod.tfvars -auto-approve
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
