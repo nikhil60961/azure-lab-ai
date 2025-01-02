@@ -4,20 +4,23 @@ on:
   push:
     branches:
       # - main
-      - nonprod
+      # - nonprod
+      - test
 permissions:
   id-token: write
   issues: write
   contents: read
+
 jobs:
+
+######## Development Environment triggers with nonprod branch ########### 
+
   development:
     if: github.ref == 'refs/heads/nonprod'
     runs-on: self-hosted
 
-    # environment: 'dev'
+
     steps:
-
-
       - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -38,24 +41,8 @@ jobs:
         with:
           terraform_version: 1.1.0
 
-        
-      # - name: Terraform Init
-      #   run: |
-      #     terraform init \
-      #       -reconfigure \
-      #       -backend-config="resource_group_name=NYU-lab" \
-      #       -backend-config="storage_account_name=nyudev" \
-      #       -backend-config="container_name=nyudevcontainer" \
-      #       -backend-config="key=nyu-lab-ai.tfstate" \
-      #   # -backend-config="use_azure_rm_environment=true" \
-      #   # -backend-config="use_azure_rm_enid=true"
-      #   env:
-      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      #     ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      #     ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
-  plan:
+  dev-plan:
     if: success()
     runs-on: self-hosted
     # environment: 'dev'
@@ -77,17 +64,17 @@ jobs:
         run: |
           terraform init \
             -reconfigure \
-            -backend-config="resource_group_name=NYU-lab" \
-            -backend-config="storage_account_name=nyudev" \
-            -backend-config="container_name=nyudevcontainer" \
-            -backend-config="key=nyu-lab-ai.tfstate" \
-        # -backend-config="use_azure_rm_environment=true" \
-        # -backend-config="use_azure_rm_enid=true"
+            -backend-config="resource_group_name=rg-devops-nprod-001" \
+            -backend-config="storage_account_name=stateadbnprodeastus2001" \
+            -backend-config="container_name=tfstate-openai" \
+            -backend-config="key=shared.tfstate" \
+
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
       - name: Terraform Plan
         run: |
           terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan
@@ -104,8 +91,8 @@ jobs:
           path: tfplan
 
   
-  apply:
-    needs: plan
+  dev-apply:
+    needs: dev-plan
     runs-on: self-hosted
     environment: 'dev'
     steps:
@@ -126,12 +113,26 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
+
+######## Production Environment triggers with main branch ########### 
+
   production:
     if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
-    env:
-      TF_VAR_ENVIRONMENT: prod
+
     steps:
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+          
+          
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -140,6 +141,24 @@ jobs:
         with:
           terraform_version: 1.1.0
 
+
+  prod-plan:
+    if: success()
+    runs-on: self-hosted
+    needs: production 
+    steps:
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+      - name: Checkout Code
+        uses: actions/checkout@v3
       - name: Terraform Init
         run: |
           terraform init \
@@ -147,13 +166,46 @@ jobs:
             -backend-config="resource_group_name=rg-devops-prod-001" \
             -backend-config="storage_account_name=stateadbprodeastus2001" \
             -backend-config="container_name=tfstate-openai" \
-            -backend-config="key=shared.tfstate" 
-    # -backend-config="use_azure_rm_environment=true" \
-    # -backend-config="use_azure_rm_enid=true"
+            -backend-config="key=shared.tfstate" \
+
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Upload tfplan Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: tfplan
+
+  prod-apply:
+
+    needs: prod-plan
+    runs-on: self-hosted
+    environment: 'prod'
+    steps:
+      - name: Download tfplan Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Terraform Apply
         run: |
-          terraform apply -var-file=prod/prod.tfvars -auto-approve
+          terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
