@@ -14,8 +14,7 @@ jobs:
     if: github.ref == 'refs/heads/nonprod'
     runs-on: self-hosted
 
-    env:
-      TF_VAR_ENVIRONMENT: dev
+    # environment: 'dev'
     steps:
 
 
@@ -56,6 +55,13 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
+  plan:
+    needs: development
+    runs-on: self-hosted
+    environment: 'dev'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Terraform Plan
         run: |
@@ -66,15 +72,26 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
-      - name: Await Manual Approval
-        uses: trstringer/manual-approval@v1
+      - name: Upload tfplan Artifact
+        uses: actions/upload-artifact@v3
         with:
-          secret: ${{ github.TOKEN }}
-          approvers: nikhil609651  # ensure this is a valid GitHub username
-          minimum-approvals: 1
-          issue-title: "Manual Approval Required for Terraform Apply"
-          issue-body: "Please review and approve the deployment."
+          name: tfplan
+          path: tfplan
+
   
+  apply:
+    needs: plan
+    runs-on: self-hosted
+    environment: 'dev'
+    steps:
+      - name: Download tfplan Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve tfplan
