@@ -32,7 +32,7 @@ terraform {
 
 provider "azurerm" {
     # Configuration options
-    tenant_id = "${var.tenant_id}"
+    tenant_id = "d23ee0cc-d25f-4d82-9ea6-fbeff333c35f"
     subscription_id = "${var.subscription_id}"
     client_id = "${var.client_id}"
 
