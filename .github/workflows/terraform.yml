@@ -125,7 +125,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 
-######## Production Environment triggers with main branch   ########### 
+######## Production Environment triggers with main branch  ########### 
 
   production:
     if: github.ref == 'refs/heads/main'
