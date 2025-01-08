@@ -6,4 +6,6 @@ tenant_id = ""
 environment = "dev"
 workspace = "shared"
 
-prvt_network_cidr = "172.26.31.0/28"
+location = "East US 2"
+rg = "NYU-lab"
+# prvt_network_cidr = "172.26.31.0/28"

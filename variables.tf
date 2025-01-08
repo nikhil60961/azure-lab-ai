@@ -1,5 +1,5 @@
 
-variable "workspace" {
+variable "rg" {
     type = string
     description = "Name of the workspace. This value is set to 'global' for the global shared AOAI stack. For team / project-specific deployments, use a different name, for ex tov for the TOV team."
 }
@@ -28,12 +28,12 @@ variable "client_id" {
 }
 
 
-variable "prvt_network_cidr" {
+variable "location" {
   type = string
   description = "VNet network address space in CIDR notation."
 }
 
-variable "tenant_id" {
-  type = string
-  description = "tenant id."
-}
+# variable "tenant_id" {
+#   type = string
+#   description = "tenant id."
+# }
