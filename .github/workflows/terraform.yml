@@ -3,7 +3,7 @@ name: Terraform Deployment
 on:
   push:
     branches:
-      # - main
+      - main
       - nonprod
 
 permissions:
@@ -134,7 +134,8 @@ jobs:
     steps:
       - uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+          allow-no-subscriptions: true
 
       - name: Azure CLI script
         uses: azure/cli@v2
@@ -161,7 +162,8 @@ jobs:
     steps:
       - uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+         allow-no-subscriptions: true
 
       - name: Azure CLI script
         uses: azure/cli@v2
