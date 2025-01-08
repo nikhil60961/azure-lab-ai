@@ -70,10 +70,10 @@ jobs:
         run: |
           terraform init \
             -reconfigure \
-            -backend-config="resource_group_name=rg-devops-nprod-001" \
-            -backend-config="storage_account_name=stateadbnprodeastus2001" \
-            -backend-config="container_name=tfstate-openai" \
-            -backend-config="key=shared.tfstate" \
+            -backend-config="resource_group_name=NYU-lab" \
+            -backend-config="storage_account_name=nyudev" \
+            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="key=nyu-lab-ai.tfstate" \
 
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -175,10 +175,10 @@ jobs:
         run: |
           terraform init \
             -reconfigure \
-            -backend-config="resource_group_name=rg-devops-prod-001" \
-            -backend-config="storage_account_name=stateadbprodeastus2001" \
-            -backend-config="container_name=tfstate-openai" \
-            -backend-config="key=shared.tfstate" \
+            -backend-config="resource_group_name=NYU-lab" \
+            -backend-config="storage_account_name=nyudev" \
+            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="key=nyu-lab-prod-ai.tfstate" \
 
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
