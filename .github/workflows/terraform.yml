@@ -48,7 +48,7 @@ jobs:
   dev-plan:
     if: success()
     runs-on: self-hosted
-    # environment: 'dev'
+    environment: 'dev'
     needs: development 
     steps:
       - uses: azure/login@v2
