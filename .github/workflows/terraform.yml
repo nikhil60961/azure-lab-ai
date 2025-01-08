@@ -26,7 +26,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Dump Unmasked client-id
-        run: echo "Unmasked clientid:" ${{secrets.AZURE_CREDENTIALS}} | sed 's/./& /g'
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
 
       - name: Azure CLI script
         uses: azure/cli@v2
@@ -56,7 +56,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Dump Unmasked client-id
-        run: echo "Unmasked clientid:" ${{secrets.AZURE_CREDENTIALS}} | sed 's/./& /g'
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
 
       - name: Azure CLI script
         uses: azure/cli@v2
@@ -111,7 +111,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Dump Unmasked client-id
-        run: echo "Unmasked clientid:" ${{secrets.AZURE_CREDENTIALS}} | sed 's/./& /g'
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
         
       - name: Terraform Apply
         run: |
@@ -149,7 +149,8 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.0
-
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
 
   prod-plan:
     if: success()
@@ -168,6 +169,8 @@ jobs:
             az account show
       - name: Checkout Code
         uses: actions/checkout@v3
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'        
       - name: Terraform Init
         run: |
           terraform init \
@@ -191,7 +194,8 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
       - name: Upload tfplan Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -208,7 +212,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: tfplan
-
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
       - name: Checkout Code
         uses: actions/checkout@v3
 
