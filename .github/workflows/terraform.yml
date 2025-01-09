@@ -13,7 +13,7 @@ permissions:
 
 jobs:
 
-######## Development Environment triggers with nonprod branch ########### 
+######## Development Environment triggers with nonprod branch  ########### 
 
   development:
     if: github.ref == 'refs/heads/nonprod'
@@ -75,7 +75,7 @@ jobs:
             -reconfigure \
             -backend-config="resource_group_name=NYU-lab" \
             -backend-config="storage_account_name=nyudev" \
-            -backend-config="container_name=nyudevcontainers" \
+            -backend-config="container_name=nyudevcontainer" \
             -backend-config="key=nyu-lab-ai.tfstate" \
 
         env:
