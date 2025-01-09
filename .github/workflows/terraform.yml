@@ -75,7 +75,7 @@ jobs:
             -reconfigure \
             -backend-config="resource_group_name=NYU-lab" \
             -backend-config="storage_account_name=nyudev" \
-            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="container_name=nyudevcontainers" \
             -backend-config="key=nyu-lab-ai.tfstate" \
 
         env:
