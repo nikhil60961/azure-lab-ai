@@ -1,6 +1,6 @@
 
 
-Core features: 
+Core features:  
 1. remote tfstate management, also supporting workspaces for quick testing, replicating but without disrupting the base environments (dev, prod)
     - ALL backend config is stored in:
         - for Dev: nonprod/dev/dev.backend.hclb
