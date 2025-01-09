@@ -13,7 +13,7 @@ permissions:
 
 jobs:
 
-######## Development Environment triggers with nonprod branch   ########### 
+######## Development Environment triggers with nonprod branch  ########### 
 
   development:
     if: github.ref == 'refs/heads/nonprod'
