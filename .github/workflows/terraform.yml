@@ -76,27 +76,27 @@ jobs:
 
       - name: Terraform Init
         run: |
-          terraform init -backend=false
-        # -reconfigure \
-        # -backend-config="resource_group_name=rg-alz-prod-state-eastus2-001" \
-        # -backend-config="storage_account_name=stoalzprodeas001usrq" \
-        # -backend-config="container_name=prod-tfstate" \
-        # -backend-config="key=daait-lz-az-aif-shared.tfstate" \
+          terraform init \
+            -reconfigure \
+            -backend-config="resource_group_name=NYU-lab" \
+            -backend-config="storage_account_name=nyudev" \
+            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="key=nyu-lab-ai.tfstate" \
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
-        # env:
-        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
       - name: Terraform Plan
         run: |
           terraform plan -out=/tmp/dev_tfplan -input=false
-        # env:
-        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
       - name: Upload tfplan Artifact
         uses: actions/upload-artifact@v4
@@ -131,16 +131,20 @@ jobs:
   
 
         - name: Terraform Init
+
           run: |
-            terraform init -backend=false
-
-
-    #   env:
-    #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-    #     ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-    #     ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-    #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-    
+            terraform init \
+              -reconfigure \
+              -backend-config="resource_group_name=NYU-lab" \
+              -backend-config="storage_account_name=nyudev" \
+              -backend-config="container_name=nyudevcontainer" \
+              -backend-config="key=nyu-lab-ai.tfstate" \
+          env:
+            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      
 
         - name: Download Specific Artifact - dev_tfplan from nonprod branch
           env:
@@ -194,8 +198,8 @@ jobs:
         
             # Apply the Terraform plan
             terraform apply -auto-approve dev_tfplan
-    # env:
-    # ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-    # ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-    # ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-    # ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          env:
+            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
