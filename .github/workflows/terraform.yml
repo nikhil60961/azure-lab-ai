@@ -30,7 +30,12 @@ jobs:
       RUNNER_TEMP: /tmp
 
     steps:
-          
+
+      - uses: azure/login@v2
+        with:
+         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+         allow-no-subscriptions: true
+
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -60,10 +65,10 @@ jobs:
       RUNNER_TEMP: /tmp
     needs: terraform_validate_dev
     steps:
-    #   - uses: azure/login@v2
-    #     with:
-    #       creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-    #       allow-no-subscriptions: true
+      - uses: azure/login@v2
+        with:
+         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+         allow-no-subscriptions: true
 
 
       - name: Setup Terraform
