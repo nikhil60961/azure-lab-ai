@@ -96,7 +96,7 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          terraform plan -out=/tmp/dev_tfplan -input=false
+          terraform plan -var-file=nonprod/dev/dev.tfvars -out=/tmp/dev_tfplan -input=false
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
