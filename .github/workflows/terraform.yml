@@ -1,0 +1,210 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - nonprod
+
+
+permissions:
+  id-token: write
+  issues: write
+  contents: read
+  actions: read
+
+concurrency:
+  group: terraform-deployment # Unique lock per branch
+  cancel-in-progress: false # Queue new workflows instead of canceling
+
+
+jobs:
+
+######## Terraform plan and apply for dev branch  ########### 
+
+  terraform_validate_dev:
+    if: github.ref == 'refs/heads/nonprod'
+    runs-on: self-hosted
+    environment: 'terraform_validate_dev'
+    env:
+      RUNNER_TEMP: /tmp
+
+    steps:
+
+      - uses: azure/login@v2
+        with:
+         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+         allow-no-subscriptions: true
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.0
+
+      - name: Run terraform fmt
+        run: |
+            terraform fmt 
+
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+
+      - name: Validate Terraform Configuration
+        run: terraform validate
+
+  terraform_plan_dev:
+    if: success()
+    runs-on: self-hosted
+    environment: 'terraform_plan_dev'
+    env:
+      RUNNER_TEMP: /tmp
+    needs: terraform_validate_dev
+    steps:
+      - uses: azure/login@v2
+        with:
+         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+         allow-no-subscriptions: true
+
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+         terraform_version: 1.1.0
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -reconfigure \
+            -backend-config="resource_group_name=NYU-lab" \
+            -backend-config="storage_account_name=nyudev" \
+            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="key=nyu-lab-ai.tfstate" \
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -var-file=nonprod/dev/dev.tfvars -out=/tmp/dev_tfplan -input=false
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Upload tfplan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev_tfplan
+          path: /tmp/dev_tfplan
+
+  
+
+
+######## Terraform plan and apply for main branch   ########### 
+
+  terraform_apply_prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    environment: 'terraform_apply_prod'
+    # needs: terraform_plan_dev
+    steps:
+        # - uses: azure/login@v2
+        #   with:
+        #     creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+        #     allow-no-subscriptions: true
+
+        - name: Checkout Code
+          uses: actions/checkout@v3
+  
+  
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_version: 1.1.0
+  
+
+        - name: Terraform Init
+
+          run: |
+            terraform init \
+              -reconfigure \
+              -backend-config="resource_group_name=NYU-lab" \
+              -backend-config="storage_account_name=nyudev" \
+              -backend-config="container_name=nyudevcontainer" \
+              -backend-config="key=nyu-lab-ai.tfstate" \
+          env:
+            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      
+
+        - name: Download Specific Artifact - dev_tfplan from nonprod branch
+          env:
+            GITHUB_TOKEN: ${{ secrets.action_token }}
+          run: |
+            # Get the most recent workflow runs from the nonprod branch
+            WORKFLOW_RUNS=$(curl -s \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/runs?branch=nonprod&status=completed" | jq -c '.workflow_runs[]')
+        
+            # Loop through the workflow runs to find an artifact
+            echo "$WORKFLOW_RUNS" | jq -c '.' | while read run; do
+              WORKFLOW_RUN_ID=$(echo $run | jq -r '.id')
+              ARTIFACTS_JSON=$(curl -s \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/runs/$WORKFLOW_RUN_ID/artifacts")
+        
+              # Search for the specific artifact name 'dev_tfplan'
+              ARTIFACT_ID=$(echo $ARTIFACTS_JSON | jq -r '.artifacts[] | select(.name == "dev_tfplan") | .id')
+        
+              if [[ ! -z "$ARTIFACT_ID" ]]; then
+                echo "Artifact found: $ARTIFACT_ID"
+                
+                # Download the artifact using its ID
+                curl -sL \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip" \
+                  -o dev_tfplan.zip
+        
+                if [[ -f dev_tfplan.zip ]]; then
+                  echo "Artifact 'dev_tfplan.zip' downloaded."
+                  # Optionally, unzip the artifact
+                  unzip dev_tfplan.zip -d dev_tfplan_contents
+                  # List files in the extraction directory
+                  echo "Listing contents of the extracted directory:"
+                  ls -alh dev_tfplan_contents
+                  break
+                else
+                  echo "Failed to download 'dev_tfplan.zip'."
+                fi
+              fi
+            done
+
+        - name: Terraform Apply
+          run: |
+            # Navigate to the directory containing the Terraform plan file
+            cd dev_tfplan_contents
+        
+            # Apply the Terraform plan
+            terraform apply -auto-approve dev_tfplan
+          env:
+            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
