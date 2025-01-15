@@ -24,12 +24,7 @@ jobs:
 
   terraform_validate_dev:
     if: github.ref == 'refs/heads/nonprod'
-    runs-on: ["self-hosted-vm", "rhel9"]
-    container:
-      image: ghcr.io/nyulh/gh-azure-runner-image:v1.0.3
-      credentials: 
-        username: ${{ github.actor }}
-        password: ${{ secrets.NYULH_GHCR_READ }}
+    runs-on: self-hosted
     environment: 'terraform_validate_dev'
     env:
       RUNNER_TEMP: /tmp
@@ -59,12 +54,7 @@ jobs:
 
   terraform_plan_dev:
     if: success()
-    runs-on: ["self-hosted", "rhel9"]
-    container:
-      image: ghcr.io/nyulh/gh-azure-runner-image:v1.0.3
-      credentials: 
-        username: ${{ github.actor }}
-        password: ${{ secrets.NYULH_GHCR_READ }}
+    runs-on: self-hosted
     environment: 'terraform_plan_dev'
     env:
       RUNNER_TEMP: /tmp
@@ -121,12 +111,7 @@ jobs:
 
   terraform_apply_prod:
     if: github.ref == 'refs/heads/main'
-    runs-on: ["self-hosted", "rhel9"]
-    container:
-        image: ghcr.io/nyulh/gh-azure-runner-image:v1.0.3
-        credentials: 
-          username: ${{ github.actor }}
-          password: ${{ secrets.NYULH_GHCR_READ }}
+    runs-on: self-hosted
     environment: 'terraform_apply_prod'
     # needs: terraform_plan_dev
     steps:
