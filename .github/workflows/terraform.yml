@@ -58,7 +58,7 @@ jobs:
         run: terraform validate
 
   terraform_plan_dev:
-    if: success()
+    if: success() || github.ref == 'refs/heads/main'
     runs-on: self-hosted
     environment: 'terraform_plan_dev'
     env:
