@@ -112,7 +112,7 @@ jobs:
   
 
 
-######## Terraform plan and apply for main branch  ########### 
+######## Terraform plan and apply for main branch   ########### 
 
   terraform_apply_prod:
     if: github.ref == 'refs/heads/main'
