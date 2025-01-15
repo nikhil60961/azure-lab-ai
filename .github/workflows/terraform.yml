@@ -24,18 +24,18 @@ jobs:
 
   terraform_validate_dev:
     if: github.ref == 'refs/heads/nonprod'
-    runs-on: self-hosted
+    runs-on: ["self-hosted-vm", "rhel9"]
+    container:
+      image: ghcr.io/nyulh/gh-azure-runner-image:v1.0.3
+      credentials: 
+        username: ${{ github.actor }}
+        password: ${{ secrets.NYULH_GHCR_READ }}
     environment: 'terraform_validate_dev'
     env:
       RUNNER_TEMP: /tmp
 
     steps:
-
-      - uses: azure/login@v2
-        with:
-         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-         allow-no-subscriptions: true
-
+          
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -59,16 +59,21 @@ jobs:
 
   terraform_plan_dev:
     if: success()
-    runs-on: self-hosted
+    runs-on: ["self-hosted", "rhel9"]
+    container:
+      image: ghcr.io/nyulh/gh-azure-runner-image:v1.0.3
+      credentials: 
+        username: ${{ github.actor }}
+        password: ${{ secrets.NYULH_GHCR_READ }}
     environment: 'terraform_plan_dev'
     env:
       RUNNER_TEMP: /tmp
     needs: terraform_validate_dev
     steps:
-      - uses: azure/login@v2
-        with:
-         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-         allow-no-subscriptions: true
+    #   - uses: azure/login@v2
+    #     with:
+    #       creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+    #       allow-no-subscriptions: true
 
 
       - name: Setup Terraform
@@ -81,27 +86,27 @@ jobs:
 
       - name: Terraform Init
         run: |
-          terraform init \
-            -reconfigure \
-            -backend-config="resource_group_name=NYU-lab" \
-            -backend-config="storage_account_name=nyudev" \
-            -backend-config="container_name=nyudevcontainer" \
-            -backend-config="key=nyu-lab-ai.tfstate" \
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          terraform init -backend=false
+        # -reconfigure \
+        # -backend-config="resource_group_name=rg-alz-prod-state-eastus2-001" \
+        # -backend-config="storage_account_name=stoalzprodeas001usrq" \
+        # -backend-config="container_name=prod-tfstate" \
+        # -backend-config="key=daait-lz-az-aif-shared.tfstate" \
 
+        # env:
+        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
       - name: Terraform Plan
         run: |
-          terraform plan -var-file=nonprod/dev/dev.tfvars -out=/tmp/dev_tfplan -input=false
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          terraform plan -out=/tmp/dev_tfplan -input=false
+        # env:
+        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
       - name: Upload tfplan Artifact
         uses: actions/upload-artifact@v4
@@ -112,11 +117,16 @@ jobs:
   
 
 
-######## Terraform plan and apply for main branch   ########### 
+######## Terraform plan and apply for main branch  ########### 
 
   terraform_apply_prod:
     if: github.ref == 'refs/heads/main'
-    runs-on: self-hosted
+    runs-on: ["self-hosted", "rhel9"]
+    container:
+        image: ghcr.io/nyulh/gh-azure-runner-image:v1.0.3
+        credentials: 
+          username: ${{ github.actor }}
+          password: ${{ secrets.NYULH_GHCR_READ }}
     environment: 'terraform_apply_prod'
     # needs: terraform_plan_dev
     steps:
@@ -136,20 +146,16 @@ jobs:
   
 
         - name: Terraform Init
-
           run: |
-            terraform init \
-              -reconfigure \
-              -backend-config="resource_group_name=NYU-lab" \
-              -backend-config="storage_account_name=nyudev" \
-              -backend-config="container_name=nyudevcontainer" \
-              -backend-config="key=nyu-lab-ai.tfstate" \
-          env:
-            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-            ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-            ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      
+            terraform init -backend=false
+
+
+    #   env:
+    #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    #     ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+    #     ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+    
 
         - name: Download Specific Artifact - dev_tfplan from nonprod branch
           env:
@@ -203,8 +209,8 @@ jobs:
         
             # Apply the Terraform plan
             terraform apply -auto-approve dev_tfplan
-          env:
-            ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-            ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-            ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-            ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+    # env:
+    # ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    # ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+    # ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    # ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
