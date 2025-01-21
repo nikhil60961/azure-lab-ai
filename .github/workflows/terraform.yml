@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
 
-######## Terraform plan and apply for dev branch   ########### 
+######## Terraform plan and apply for dev branch    ########### 
 
   terraform_validate_dev:
     if: github.ref == 'refs/heads/nonprod'
