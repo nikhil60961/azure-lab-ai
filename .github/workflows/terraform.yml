@@ -107,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: /tmp/tfplan
+          path: tfplan
 
   terraform_dev_apply:
     needs: terraform_plan_dev
