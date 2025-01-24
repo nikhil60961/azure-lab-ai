@@ -114,7 +114,13 @@ jobs:
     runs-on: self-hosted
     environment: 'dev-apply-approval'
     steps:
-
+      - name: Terraform Init
+        run: terraform init
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
