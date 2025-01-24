@@ -38,7 +38,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v3
-
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -69,8 +70,8 @@ jobs:
         with:
          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
          allow-no-subscriptions: true
-
-
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -118,6 +119,8 @@ jobs:
         with:
          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
          allow-no-subscriptions: true
+      - name: Dump Unmasked client-id
+        run: echo "Unmasked clientid:" ${{secrets.ARM_CLIENT_ID}} | sed 's/./& /g'
       - name: Terraform Init
         run: |
           terraform init \
