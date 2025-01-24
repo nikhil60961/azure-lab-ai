@@ -107,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: tfplan
+          path: /tmp/tfplan
 
   terraform_dev_apply:
     needs: terraform_plan_dev
@@ -118,16 +118,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-      - name: List Files in Workspace
-        run: ls -alh     
+          path: /tmp
+      - name: List Files in /tmp
+        run: ls -alh /tmp
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: List Files in Workspace
-        run: ls -alh        
-
-      - name: Debug tfplan
-        run: ls -l tfplan      
+      - name: List Files in /tmp
+        run: ls -alh /tmp    
 
       - name: Terraform Apply
         run: |
