@@ -68,6 +68,7 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
     needs: terraform_validate_dev
     steps:
       - uses: azure/login@v2
@@ -102,8 +103,6 @@ jobs:
       - name: Create String Output
         id: tf-plan-string
         run: |
-          set -x  # Enable debugging
-          terraform show -no-color tfplan
           TERRAFORM_PLAN=$(terraform show -no-color tfplan)
           
           delimiter="$(openssl rand -hex 8)"
@@ -116,7 +115,6 @@ jobs:
           echo '```' >> $GITHUB_OUTPUT
           echo "</details>" >> $GITHUB_OUTPUT
           echo "${delimiter}" >> $GITHUB_OUTPUT
-          set +x  # Disable debugging
           
       # Publish the Terraform plan to the task summary
       - name: Publish Terraform Plan to Task Summary
@@ -149,33 +147,19 @@ jobs:
             -backend-config="storage_account_name=nyudev" \
             -backend-config="container_name=nyudevcontainer" \
             -backend-config="key=nyu-lab-ai.tfstate" \
-        # env:
-        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
 
 
       - name: Terraform Plan
         run: |
           terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan -input=false
-        # env:
-        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
 
       - name: Terraform Apply
         run: |
 
-      
-          # Apply the Terraform plan 
           terraform apply -auto-approve tfplan
-        # env:
-        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
 
           
 
