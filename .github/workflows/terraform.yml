@@ -143,8 +143,7 @@ jobs:
 
       - name: Terraform Apply
         run: |
-          # Navigate to the directory containing the Terraform plan file
-          cd dev_tfplan_contents
+
       
           # Apply the Terraform plan
           terraform apply -auto-approve tfplan
