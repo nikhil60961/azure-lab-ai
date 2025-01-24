@@ -108,6 +108,8 @@ jobs:
       - name: Create String Output
         id: tf-plan-string
         run: |
+          set -x  # Enable debugging
+          terraform show -no-color tfplan
           TERRAFORM_PLAN=$(terraform show -no-color tfplan)
           
           delimiter="$(openssl rand -hex 8)"
@@ -120,6 +122,7 @@ jobs:
           echo '```' >> $GITHUB_OUTPUT
           echo "</details>" >> $GITHUB_OUTPUT
           echo "${delimiter}" >> $GITHUB_OUTPUT
+          set +x  # Disable debugging
           
       # Publish the Terraform plan to the task summary
       - name: Publish Terraform Plan to Task Summary
