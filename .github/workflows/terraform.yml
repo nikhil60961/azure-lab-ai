@@ -145,7 +145,7 @@ jobs:
         run: |
 
       
-          # Apply the Terraform plan
+          # Apply the Terraform plan 
           terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
