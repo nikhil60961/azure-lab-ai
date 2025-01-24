@@ -118,7 +118,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-
+      - name: List Files in Workspace
+        run: ls -alh     
       - name: Checkout Code
         uses: actions/checkout@v3
 
