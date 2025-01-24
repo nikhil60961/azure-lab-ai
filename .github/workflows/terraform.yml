@@ -104,11 +104,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
-      - name: Upload tfplan Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: tfplan
+
 
   terraform_dev_apply:
     needs: terraform_plan_dev
@@ -138,28 +134,31 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.0
-      - name: Download tfplan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: /tmp
-      - name: List Files in /tmp
-        run: ls -alh /tmp
-      - name: Checkout Code
-        uses: actions/checkout@v3
 
-      - name: List Files in /tmp
-        run: ls -alh /tmp    
 
-      - name: Terraform Apply
+      - name: Terraform Plan
         run: |
-          terraform apply -auto-approve /tmp/tfplan
+          terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan -input=false
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
+      - name: Terraform Apply
+        run: |
+          # Navigate to the directory containing the Terraform plan file
+          cd dev_tfplan_contents
+      
+          # Apply the Terraform plan
+          terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+          
 
 ######## Terraform plan and apply for main branch   ########### 
 
