@@ -114,6 +114,11 @@ jobs:
     runs-on: self-hosted
     environment: 'dev-apply-approval'
     steps:
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.0
       - name: Download tfplan Artifact
         uses: actions/download-artifact@v4
         with:
