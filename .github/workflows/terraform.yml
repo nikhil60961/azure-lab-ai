@@ -115,12 +115,13 @@ jobs:
     environment: 'dev-apply-approval'
     steps:
       - name: Terraform Init
-        run: terraform init
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: |
+          terraform init \
+            -reconfigure \
+            -backend-config="resource_group_name=NYU-lab" \
+            -backend-config="storage_account_name=nyudev" \
+            -backend-config="container_name=nyudevcontainer" \
+            -backend-config="key=nyu-lab-ai.tfstate" \
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
