@@ -64,6 +64,10 @@ jobs:
     environment: 'terraform_plan_dev'
     env:
       RUNNER_TEMP: /tmp
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
     needs: terraform_validate_dev
     steps:
       - uses: azure/login@v2
@@ -88,21 +92,11 @@ jobs:
             -backend-config="storage_account_name=nyudev" \
             -backend-config="container_name=nyudevcontainer" \
             -backend-config="key=nyu-lab-ai.tfstate" \
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-
 
       - name: Terraform Plan
         run: |
           terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan -input=false
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
 
       # Create a string output of the Terraform plan
       - name: Create String Output
@@ -135,6 +129,11 @@ jobs:
     needs: terraform_plan_dev
     runs-on: self-hosted
     environment: 'dev-apply-approval'
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
     steps:
       - uses: azure/login@v2
         with:
@@ -150,21 +149,21 @@ jobs:
             -backend-config="storage_account_name=nyudev" \
             -backend-config="container_name=nyudevcontainer" \
             -backend-config="key=nyu-lab-ai.tfstate" \
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        # env:
+        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 
       - name: Terraform Plan
         run: |
           terraform plan -var-file=nonprod/dev/dev.tfvars -out=tfplan -input=false
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        # env:
+        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
       - name: Terraform Apply
         run: |
@@ -172,11 +171,11 @@ jobs:
       
           # Apply the Terraform plan 
           terraform apply -auto-approve tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        # env:
+        #   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        #   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        #   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        #   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
           
 
