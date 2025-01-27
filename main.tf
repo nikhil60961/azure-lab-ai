@@ -17,6 +17,6 @@ resource "azurerm_storage_account" "storage" {
 
 resource "azurerm_storage_container" "example" {
   name                  = "tfstate-aifoundry-dev"
-  storage_account_id    = azurerm_storage_account.storage.id
+  storage_account_name  = azurerm_storage_account.storage.name
   container_access_type = "private"
 }
